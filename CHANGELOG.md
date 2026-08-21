@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added
+
+- `lengua skills [DIRECTORY] [--force]` exports lengua's bundled coding-agent skill files
+  (`SKILL.md`) to a target directory (default: current directory) — point it at
+  `.claude/skills` for Claude Code to auto-discover them, or anywhere else for a different
+  tool. Closes #5.
+- A rustdoc templating guide (`lengua_core::template`'s module docs) covering minijinja's
+  actual supported syntax: interpolation, filters, conditionals, loops, arithmetic, and
+  escaping.
+
+### Fixed
+
+- Every literal `{{ variable }}` example in the Jekyll docs site was being silently swallowed
+  by GitHub Pages' Liquid processor (which interprets `{{ }}` as its own template syntax) —
+  wrapped in `{% raw %}` blocks so the examples actually render. Closes #2.
+
 ## [0.3.0] - 2026-08-21
 
 ### Changed

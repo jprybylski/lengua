@@ -1,3 +1,5 @@
+#![doc = include_str!("../docs/templating.md")]
+
 use serde::Serialize;
 
 use crate::error::{Error, Result};

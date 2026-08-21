@@ -176,6 +176,7 @@ divergence).
 Add or update a template, committing the change. The body is read from stdin unless `--file`
 is given.
 
+{% raw %}
 ```bash
 lengua add letters/thank-you.md --title "Thank You" --field tone=formal <<'EOF'
 Dear {{ name }},
@@ -183,6 +184,7 @@ Dear {{ name }},
 Thank you for {{ reason }}.
 EOF
 ```
+{% endraw %}
 
 | Flag | Meaning |
 |---|---|
@@ -196,6 +198,18 @@ EOF
 If the input already carries its own YAML frontmatter (e.g. a hand-authored file, or output
 re-imported from `lengua get --raw`), `add` parses it and merges `--title`/`--field` on top as
 overrides, rather than nesting a second frontmatter block.
+
+`title` is the only frontmatter field lengua knows about — it's what `list`/`search` print
+alongside a template's name. Every other `--field key=value` is arbitrary: lengua doesn't
+interpret `tone`, `jurisdiction`, or any other key, it just stores whatever you write and lets
+[`search`](#search) filter on it later. A field can hold a list (write it directly in YAML
+frontmatter rather than via `--field`, which only sets scalars); `search --field key=value`
+matches if `value` equals the scalar or is one of the list's elements.
+
+Nothing here is related to [`lengua tag`](#tag) — that command names *revisions* of a template
+(a point in its git history), not frontmatter metadata. If you're tempted to add a `tags:`
+field to track something like "final" or "v2", `lengua tag add` is almost certainly what you
+want instead; see [FAQ: How is a tag different from a git tag?]({{ '/faq.html#how-is-a-tag-different-from-a-git-tag' | relative_url }}).
 
 `--json`:
 
@@ -230,8 +244,8 @@ lengua get letters/thank-you.md --var name=Ada --var reason="the review"
 `source` names whichever source the template was actually read from (the one passed to
 `--source`, or the merge winner when unscoped).
 
-Unset `{{ variables }}` are left as-is by minijinja's default undefined behavior unless the
-template supplies a default (`{{ name | default("there") }}`).
+{% raw %}Unset `{{ variables }}` are left as-is by minijinja's default undefined behavior unless the
+template supplies a default (`{{ name | default("there") }}`).{% endraw %}
 
 ---
 
@@ -266,8 +280,9 @@ greetings/hello.md	Hello	[local]
 
 ## `search`
 
-Filter templates by frontmatter field. Multiple `--field` flags are ANDed together; at least
-one is required.
+Filter templates by frontmatter field — any key you've written via [`add --field`](#add) or by
+hand in a template's YAML frontmatter, not a fixed schema. Multiple `--field` flags are ANDed
+together; at least one is required.
 
 ```bash
 lengua search --field tone=formal
@@ -323,12 +338,14 @@ Show a line-based diff of a template's content between two revisions (any revspe
 lengua diff letters/thank-you.md HEAD~1 HEAD
 ```
 
+{% raw %}
 ```
   Dear {{ name }},
   
 - Thank you for your time.
 + Thank you for {{ reason }}.
 ```
+{% endraw %}
 
 `FROM`/`TO` default to `HEAD~1`/`HEAD`.
 
@@ -338,6 +355,7 @@ lengua diff letters/thank-you.md HEAD~1 HEAD
 
 `--json`:
 
+{% raw %}
 ```json
 [
   { "tag": "equal", "line": "Dear {{ name }}," },
@@ -345,6 +363,7 @@ lengua diff letters/thank-you.md HEAD~1 HEAD
   { "tag": "insert", "line": "Thank you for {{ reason }}." }
 ]
 ```
+{% endraw %}
 
 `tag` is one of `equal`, `insert`, `delete`.
 
@@ -431,4 +450,30 @@ lengua tag rm letters/thank-you.md tense-past
 
 ```json
 { "status": "removed", "template": "letters/thank-you.md", "tag": "tense-past" }
+```
+
+---
+
+## `skills`
+
+Export lengua's bundled coding-agent skill files (`SKILL.md`) to a target directory. Doesn't
+touch a library — no `--store`/`--source` involved. Each skill lands under its own
+`<directory>/<skill-name>/SKILL.md` subdirectory, since a `SKILL.md` file's name is fixed by
+the [Agent Skills](https://github.com/anthropics/skills) convention.
+
+```bash
+lengua skills .claude/skills
+```
+
+| Flag | Meaning |
+|---|---|
+| `<DIRECTORY>` | Target directory. Defaults to the current directory. Point this at `.claude/skills` for Claude Code to auto-discover the skill(s), or anywhere else for a different tool, or just to inspect the content. |
+| `--force` | Overwrite an existing `SKILL.md` at the destination |
+
+Refuses to overwrite an existing `SKILL.md` at the destination without `--force`.
+
+`--json`:
+
+```json
+{ "directory": ".claude/skills", "created": [".claude/skills/lengua-template-authoring/SKILL.md"] }
 ```

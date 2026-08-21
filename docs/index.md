@@ -9,7 +9,7 @@ permalink: /
 # lengua
 
 **lengua** is a git-backed library for templated text: prose, Markdown, LaTeX, or code
-snippets, tagged with YAML frontmatter and rendered with Jinja-style variable substitution.
+snippets, annotated with YAML frontmatter and rendered with Jinja-style variable substitution.
 Every `add` is a real git commit, so your template library carries full history for free —
 `log` and `diff` are just `git log`/`git diff` scoped to one template.
 {: .fs-6 .fw-300 }
@@ -24,10 +24,10 @@ Every `add` is a real git commit, so your template library carries full history 
 lengua manages a directory of small, reusable templates — think a library of letter
 templates, prompt fragments, boilerplate clauses, or commit-message skeletons — with:
 
-- **Frontmatter tagging** — arbitrary YAML fields (`tone: formal`, `jurisdiction: eu`, ...)
+- **Frontmatter fields** — arbitrary YAML fields (`tone: formal`, `jurisdiction: eu`, ...)
   on every template, filterable via `search`.
-- **Jinja-style rendering** — `{{ name }}` variable interpolation via [minijinja](https://github.com/mitsuhiko/minijinja),
-  substituted at `get` time.
+- **Jinja-style rendering** — {% raw %}`{{ name }}`{% endraw %} variable interpolation via
+  [minijinja](https://github.com/mitsuhiko/minijinja), substituted at `get` time.
 - **Git-native history** — every `add` commits the change; `log` and `diff` read real git
   history, no separate database.
 - **Scriptable `--json` output** — every command supports `--json` for use from scripts,
@@ -56,6 +56,7 @@ for `fetch`/`update`.
 
 ### 2. Add a template
 
+{% raw %}
 ```bash
 lengua add letters/thank-you.md --store ./templates-repo --title "Thank You" --field tone=formal <<'EOF'
 Dear {{ name }},
@@ -66,6 +67,7 @@ Warm regards,
 {{ sender }}
 EOF
 ```
+{% endraw %}
 
 Every `add` is a git commit — `lengua log letters/thank-you.md` shows its full history.
 
@@ -90,6 +92,7 @@ Ready for more? See [Commands]({{ '/commands.html' | relative_url }}) for the fu
 |---|---|
 | [Installation]({{ '/installation.html' | relative_url }}) | Building from source, installing a release binary |
 | [Consuming an existing library]({{ '/consuming.html' | relative_url }}) | Pulling down a shared library with `init --from-dir`/`--from-repo`, and pooling more sources with `fetch`/`update` |
-| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `fetch` / `update` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag`, flags, `--json` shapes |
+| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `fetch` / `update` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag` / `skills`, flags, `--json` shapes |
 | [Architecture]({{ '/architecture.html' | relative_url }}) | Crate layout, the git-backed store design, what was deliberately left out |
 | [FAQ]({{ '/faq.html' | relative_url }}) | Common questions |
+| [Templating guide](https://docs.rs/lengua-core/latest/lengua_core/template/) | Full minijinja syntax overview (rustdoc) — interpolation, filters, conditionals, loops, escaping |

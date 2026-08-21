@@ -1,9 +1,7 @@
 ---
 title: Thank You Letter
 tone: formal
-tags:
-  - letter
-  - formal
+audience: client
 ---
 
 Dear {{ name }},

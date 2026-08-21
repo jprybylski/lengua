@@ -73,6 +73,9 @@ pub enum Error {
         "source '{name}' has diverged from its origin and can't be fast-forwarded — resolve manually or re-fetch it fresh"
     )]
     NotFastForward { name: String },
+
+    #[error("skill file(s) already exist: {} (use --force to overwrite)", paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", "))]
+    SkillAlreadyExists { paths: Vec<PathBuf> },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
