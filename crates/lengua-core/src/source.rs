@@ -229,7 +229,8 @@ pub(crate) fn update_cloned(
     source_name: &str,
     _git_ref: Option<&str>,
 ) -> Result<UpdateStatus> {
-    let repo = gix::open(dest_root).map_err(|e| Error::Git(e.to_string()))?;
+    let mut repo = gix::open(dest_root).map_err(|e| Error::Git(e.to_string()))?;
+    ensure_committer_identity(&mut repo)?;
     let branch = current_branch_name(&repo)?;
     let before = repo.head_id().ok().map(|id| id.detach());
 
@@ -281,11 +282,33 @@ pub(crate) fn update_copied(
 
     merge_objects(&origin.join(".git"), &dest_root.join(".git"))?;
 
-    let repo = gix::open(dest_root).map_err(|e| Error::Git(e.to_string()))?;
+    let mut repo = gix::open(dest_root).map_err(|e| Error::Git(e.to_string()))?;
+    ensure_committer_identity(&mut repo)?;
     let branch = current_branch_name(&repo)?;
     let before = repo.head_id().ok().map(|id| id.detach());
 
     fast_forward(&repo, source_name, &branch, before, target, dest_root)
+}
+
+/// Ensures `repo.committer()` resolves to something, setting a synthetic fallback identity
+/// (in-memory only, never written to `.git/config`) if none is configured anywhere — the same
+/// "commits aren't meant to represent human authorship" rationale as `Store::commit_file`'s
+/// fallback, needed here because writing to `refs/heads/*` (a reflog-tracked namespace, unlike
+/// `refs/lengua/tags/*`) requires a resolvable signature for the reflog entry, and a fresh CI
+/// runner with no git identity configured anywhere would otherwise fail every fast-forward.
+fn ensure_committer_identity(repo: &mut gix::Repository) -> Result<()> {
+    if matches!(repo.committer(), Some(Ok(_))) {
+        return Ok(());
+    }
+    let mut config = repo.config_snapshot_mut();
+    config
+        .set_value(&gix::config::tree::User::NAME, "lengua")
+        .map_err(|e| Error::Git(e.to_string()))?;
+    config
+        .set_value(&gix::config::tree::User::EMAIL, "lengua@localhost")
+        .map_err(|e| Error::Git(e.to_string()))?;
+    config.commit().map_err(|e| Error::Git(e.to_string()))?;
+    Ok(())
 }
 
 /// The short name of the branch `HEAD` currently points at (e.g. `"main"`), which is what
