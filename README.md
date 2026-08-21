@@ -1,7 +1,7 @@
 # lengua
 
 A git-backed CLI for managing a library of templated text: plain text, Markdown,
-LaTeX, or code snippets, tagged with YAML/TOML frontmatter and rendered with
+LaTeX, or code snippets, annotated with YAML frontmatter and rendered with
 [minijinja](https://github.com/mitsuhiko/minijinja) (Jinja2-style) variables.
 
 `lengua` is a persistent, queryable library of atomic templates — not a
