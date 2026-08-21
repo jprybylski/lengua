@@ -1,0 +1,20 @@
+[package]
+name = "lengua-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core engine for lengua: templated text/snippet library with git-backed storage"
+
+[dependencies]
+gix = { version = "0.86.0", features = ["tree-editor"] }
+gray_matter = { version = "0.3.2", features = ["toml"] }
+minijinja = "2.24.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+serde_yaml = "0.9.34"
+similar = "3.2.0"
+thiserror = "2.0.20"
+
+[dev-dependencies]
+tempfile = "3.27.0"
