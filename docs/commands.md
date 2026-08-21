@@ -197,6 +197,18 @@ If the input already carries its own YAML frontmatter (e.g. a hand-authored file
 re-imported from `lengua get --raw`), `add` parses it and merges `--title`/`--field` on top as
 overrides, rather than nesting a second frontmatter block.
 
+`title` is the only frontmatter field lengua knows about — it's what `list`/`search` print
+alongside a template's name. Every other `--field key=value` is arbitrary: lengua doesn't
+interpret `tone`, `jurisdiction`, or any other key, it just stores whatever you write and lets
+[`search`](#search) filter on it later. A field can hold a list (write it directly in YAML
+frontmatter rather than via `--field`, which only sets scalars); `search --field key=value`
+matches if `value` equals the scalar or is one of the list's elements.
+
+Nothing here is related to [`lengua tag`](#tag) — that command names *revisions* of a template
+(a point in its git history), not frontmatter metadata. If you're tempted to add a `tags:`
+field to track something like "final" or "v2", `lengua tag add` is almost certainly what you
+want instead; see [FAQ: How is a tag different from a git tag?]({{ '/faq.html#how-is-a-tag-different-from-a-git-tag' | relative_url }}).
+
 `--json`:
 
 ```json
@@ -266,8 +278,9 @@ greetings/hello.md	Hello	[local]
 
 ## `search`
 
-Filter templates by frontmatter field. Multiple `--field` flags are ANDed together; at least
-one is required.
+Filter templates by frontmatter field — any key you've written via [`add --field`](#add) or by
+hand in a template's YAML frontmatter, not a fixed schema. Multiple `--field` flags are ANDed
+together; at least one is required.
 
 ```bash
 lengua search --field tone=formal

@@ -1,8 +1,7 @@
 ---
 title: Hello Greeting
-tags:
-  - greeting
-  - casual
+tone: casual
+audience: team
 ---
 
 Hi {{ name }}, welcome!

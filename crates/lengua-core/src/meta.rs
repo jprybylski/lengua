@@ -3,8 +3,9 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 /// Frontmatter metadata attached to a template: a well-known `title` plus an
-/// open-ended bag of tags/fields (tense, tone, jurisdiction, ...) so the
-/// library doesn't need to know the metadata schema in advance.
+/// open-ended bag of fields (tense, tone, jurisdiction, ...) so the library
+/// doesn't need to know the metadata schema in advance. Unrelated to
+/// [`crate::tags`] — that's revision pointers (`lengua tag`), not frontmatter.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct TemplateMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
