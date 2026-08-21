@@ -7,6 +7,8 @@
 pub mod diff;
 pub mod error;
 pub mod frontmatter;
+pub mod library;
+mod manifest;
 pub mod meta;
 pub mod query;
 mod source;
@@ -16,7 +18,9 @@ pub mod template;
 
 pub use diff::{DiffLine, DiffTag, diff_text};
 pub use error::{Error, Result};
+pub use library::{FetchOutcome, Library, ShadowWarning};
 pub use meta::TemplateMeta;
 pub use query::Query;
+pub use source::UpdateStatus;
 pub use store::{LogEntry, Store, TemplateEntry};
 pub use tags::TagEntry;

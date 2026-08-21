@@ -1,5 +1,5 @@
 use anyhow::Result;
-use lengua_core::{DiffTag, Store, diff_text};
+use lengua_core::{DiffTag, Library, diff_text};
 use serde::Serialize;
 
 use crate::output::{deleted, inserted, print_json};
@@ -10,14 +10,17 @@ struct DiffRow {
     line: String,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     store_path: &std::path::Path,
     name: &str,
     from: &str,
     to: &str,
+    source: Option<String>,
     json: bool,
 ) -> Result<()> {
-    let store = Store::open(store_path)?;
+    let library = Library::open(store_path)?;
+    let store = library.resolve_source(source.as_deref())?;
     let old = store.read_at_revision(name, from)?;
     let new = store.read_at_revision(name, to)?;
 

@@ -45,9 +45,9 @@ It's a deliberate v1 simplification — see
 
 ## Where is a template's history actually stored?
 
-In the store's own `.git` directory — `log`/`diff` walk real git commits made by `add`, they
-aren't a separate change-tracking mechanism. You can `cd` into a store and run ordinary `git
-log -- templates/<name>` and see the same history.
+In the source's own `.git` directory, at `.lengua/<source>/.git` — `log`/`diff` walk real git
+commits made by `add`, they aren't a separate change-tracking mechanism. You can `cd` into
+`.lengua/<source>/` and run ordinary `git log -- templates/<name>` and see the same history.
 
 ## How is a tag different from a git tag?
 
@@ -60,14 +60,16 @@ inspect them with plain git, but ordinary `git tag -l` won't list them.
 
 ## What happens if I run lengua inside my own project's git repo?
 
-`--store` defaults to the current directory, and lengua opens whatever `.git` it finds there —
-so running a command with no `--store` from inside a directory that's *already* your own
-project's git repo, but isn't a lengua store, is a real risk: without a check, lengua would
-happily commit `templates/...` blobs straight into your project's history.
+`--store` defaults to the current directory — so running a command with no `--store` from
+inside your own project (which almost certainly isn't a lengua library) needs a real guard
+against lengua committing template blobs into the wrong place.
 
-lengua guards against this: every command except `init` refuses to operate on a directory that
-doesn't already have a `templates/` folder, with an error telling you to pass `--store` or run
-`init` first. The guard is a heuristic (a directory that happens to have an unrelated top-level
-`templates/` folder would slip past it), so the safest layout is still to keep your template
-store in its own dedicated directory — a sibling of your project, not nested inside it — and
-always pass `--store` explicitly if it *is* nested, rather than relying on the default `.`.
+Since [issue #3](https://github.com/jprybylski/lengua/issues/3)'s `.lengua/` restructure, that
+guard is no longer a heuristic: every command except `init` refuses to operate on a directory
+that doesn't have a `.lengua/sources.toml` manifest, with an error telling you to pass
+`--store` or run `init` first. Unlike the old `templates/`-next-to-`.git` check, this is an
+unambiguous "is this a lengua library" test — a `.lengua/` directory is not something an
+unrelated project would ever coincidentally have. The safest layout is still to keep your
+template library in its own dedicated directory — a sibling of your project, not nested inside
+it — and always pass `--store` explicitly if it *is* nested, rather than relying on the
+default `.`.

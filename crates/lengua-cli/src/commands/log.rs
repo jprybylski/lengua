@@ -1,5 +1,5 @@
 use anyhow::Result;
-use lengua_core::Store;
+use lengua_core::Library;
 use serde::Serialize;
 
 use crate::output::{dim, print_json};
@@ -10,10 +10,15 @@ struct LogRow {
     message: String,
 }
 
-pub fn run(store_path: &std::path::Path, name: &str, json: bool) -> Result<()> {
-    let store = Store::open(store_path)?;
-    let rows: Vec<LogRow> = store
-        .log(name)?
+pub fn run(
+    store_path: &std::path::Path,
+    name: &str,
+    source: Option<String>,
+    json: bool,
+) -> Result<()> {
+    let library = Library::open(store_path)?;
+    let rows: Vec<LogRow> = library
+        .log(source.as_deref(), name)?
         .into_iter()
         .map(|e| LogRow {
             commit: e.commit,

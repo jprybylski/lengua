@@ -1,31 +1,34 @@
 use std::collections::BTreeMap;
 
 use anyhow::{Result, anyhow};
-use lengua_core::{Store, template};
+use lengua_core::{Library, template};
 use serde::Serialize;
 
 use crate::cli::parse_kv_pairs;
-use crate::output::print_json;
+use crate::output::{print_json, print_shadow_warnings};
 
 #[derive(Serialize)]
 struct GetOutput<'a> {
     name: &'a str,
+    source: &'a str,
     rendered: String,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     store_path: &std::path::Path,
     name: &str,
     vars: &[String],
     raw: bool,
     rev: Option<String>,
+    source: Option<String>,
     json: bool,
 ) -> Result<()> {
-    let store = Store::open(store_path)?;
-    let entry = match &rev {
-        Some(rev) => store.get_at_revision(name, rev)?,
-        None => store.get(name)?,
-    };
+    let library = Library::open(store_path)?;
+    if source.is_none() {
+        print_shadow_warnings(library.shadow_warnings());
+    }
+    let (entry, resolved_source) = library.get(source.as_deref(), name, rev.as_deref())?;
 
     let rendered = if raw {
         entry.body.clone()
@@ -36,7 +39,11 @@ pub fn run(
     };
 
     if json {
-        print_json(&GetOutput { name, rendered });
+        print_json(&GetOutput {
+            name,
+            source: &resolved_source,
+            rendered,
+        });
     } else {
         println!("{rendered}");
     }

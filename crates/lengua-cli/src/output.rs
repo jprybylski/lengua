@@ -1,3 +1,4 @@
+use lengua_core::ShadowWarning;
 use owo_colors::OwoColorize;
 use serde::Serialize;
 
@@ -46,4 +47,22 @@ pub fn heading(s: &str) -> String {
 
 pub fn dim(s: &str) -> String {
     s.dimmed().to_string()
+}
+
+pub fn warning(s: &str) -> String {
+    s.yellow().bold().to_string()
+}
+
+/// Prints every current name collision across a library's sources, once, to stderr — a
+/// shadowed name is never silently resolved. No-op when `warnings` is empty.
+pub fn print_shadow_warnings(warnings: &[ShadowWarning]) {
+    for w in warnings {
+        anstream::eprintln!(
+            "{} '{}' is shadowed by '{}' (also defined in '{}')",
+            warning("warning:"),
+            w.name,
+            w.winner,
+            w.loser
+        );
+    }
 }

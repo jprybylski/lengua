@@ -39,13 +39,16 @@ not an app skeleton) and does not embed a query language, a database, or an LLM 
 
 ## Quick start
 
-### 1. Initialize a store
+### 1. Initialize a library
 
 ```bash
 lengua init --store ./templates-repo
 ```
 
-This creates a git repository with a `templates/` directory inside it.
+This creates a `.lengua/` directory holding your first source (`.lengua/local/`, a git
+repository with a `templates/` directory inside it). A library can later pool templates from
+more than one source — see [Consuming an existing library]({{ '/consuming.html' | relative_url }})
+for `fetch`/`update`.
 
 <div class="tape">
   <img src="{{ '/assets/img/quickstart.gif' | relative_url }}" alt="lengua init, add, and get demo" />
@@ -86,7 +89,7 @@ Ready for more? See [Commands]({{ '/commands.html' | relative_url }}) for the fu
 | Page | What's there |
 |---|---|
 | [Installation]({{ '/installation.html' | relative_url }}) | Building from source, installing a release binary |
-| [Consuming an existing library]({{ '/consuming.html' | relative_url }}) | Pulling down a shared library with `init --from-dir`/`--from-repo` instead of starting from scratch |
-| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag`, flags, `--json` shapes |
+| [Consuming an existing library]({{ '/consuming.html' | relative_url }}) | Pulling down a shared library with `init --from-dir`/`--from-repo`, and pooling more sources with `fetch`/`update` |
+| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `fetch` / `update` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag`, flags, `--json` shapes |
 | [Architecture]({{ '/architecture.html' | relative_url }}) | Crate layout, the git-backed store design, what was deliberately left out |
 | [FAQ]({{ '/faq.html' | relative_url }}) | Common questions |

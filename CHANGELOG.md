@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-21
+
+### Changed
+
+- **Breaking**: the on-disk store layout moves from `<store>/{.git,templates/}` to
+  `<store>/.lengua/<source>/{.git,templates/}`, with a new `.lengua/sources.toml` manifest.
+  A `--store` now points at a *library* that can hold one or more named *sources* instead of
+  a single git repo — the unit lengua has always managed (`.git` + `templates/`) is unchanged,
+  it's just nested one level deeper. Old-layout stores are not migrated; `lengua` (any command
+  but `init`) now fails with a clear error pointing at the new layout instead of guessing.
+  Closes #3.
+- `Store::open`'s old heuristic ("does `templates/` exist next to `.git`") is replaced by an
+  unambiguous check: does `.lengua/sources.toml` exist.
+
+### Added
+
+- `lengua fetch` adds another source to an already-initialized library, using the same
+  `--from-dir`/`--from-repo`/`--ref`/`--subdir`/`--force` flags as `init`. This is how a
+  project pools templates from several existing stores without merging their git history —
+  including a project that never runs plain `init`/`add` at all, only ever consuming shared
+  sources.
+- `lengua update [--source <NAME>]` refreshes one or every source from its recorded origin via
+  a fast-forward-only git fetch (never a hard reset) — a diverged source fails loudly rather
+  than losing anything, and updating "all" reports every source's outcome even after one
+  fails. There's no separate lockfile: each source's own git history is the record of what
+  commit it's at.
+- `--source <NAME>` on `add`/`get`/`list`/`search`/`log`/`diff`/`tag`: required to disambiguate
+  a write or single-source read once a library has more than one source; optional on
+  `get`/`list`/`search` to read one source directly instead of the merged view.
+- Merged `get`/`list`/`search` (no `--source`) resolve a name across every source with
+  last-fetched-wins precedence. A name defined in more than one source always prints a
+  warning — at `fetch` time when the collision is created, and again whenever a shadowed name
+  is resolved — never a silent choice.
+- `init --name <NAME>` / `fetch --name <NAME>` name a source explicitly; otherwise it's
+  derived from `--from-dir`'s basename or `--from-repo`'s last path segment (plain `init` with
+  no adoption flags defaults to `local`). A name collision on auto-derivation is an error
+  asking for `--name`, not a silent rename.
+
 ## [0.2.0] - 2026-08-21
 
 ### Added

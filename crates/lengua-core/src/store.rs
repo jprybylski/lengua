@@ -9,7 +9,7 @@ use crate::frontmatter;
 use crate::meta::TemplateMeta;
 use crate::tags::{self, TagEntry};
 
-const TEMPLATES_DIR: &str = "templates";
+pub(crate) const TEMPLATES_DIR: &str = "templates";
 
 /// A git-backed library of templates rooted at a directory. Current-state
 /// reads (`get`/`list`/`search`) go straight to the working tree; `add`
@@ -108,13 +108,27 @@ impl Store {
         subdir: Option<&str>,
         force: bool,
     ) -> Result<Self> {
+        Self::init_from_with_mechanism(dest, source, git_ref, subdir, force).map(|(store, _)| store)
+    }
+
+    /// Like [`Store::init_from_dir`]/[`Store::init_from_repo`] (via their shared
+    /// `init_from`), but also returns which mechanism actually adopted the content — needed
+    /// by `Library::fetch` to record the right [`crate::source::AdoptionMechanism`] in
+    /// `sources.toml` so a later `update` picks the matching, SIGPIPE-safe strategy.
+    pub(crate) fn init_from_with_mechanism(
+        dest: &Path,
+        source: crate::source::Source<'_>,
+        git_ref: Option<&str>,
+        subdir: Option<&str>,
+        force: bool,
+    ) -> Result<(Self, crate::source::AdoptionMechanism)> {
         let Some(subdir) = subdir else {
-            let repo = crate::source::clone_or_copy(dest, source, git_ref)?;
+            let (repo, mechanism) = crate::source::clone_or_copy(dest, source, git_ref)?;
             let root = dest.to_path_buf();
             if !root.join(TEMPLATES_DIR).is_dir() {
                 return Err(Error::NotAStore(root));
             }
-            return Ok(Self { repo, root });
+            return Ok((Self { repo, root }, mechanism));
         };
 
         eprintln!(
@@ -144,7 +158,11 @@ impl Store {
                 "import from --subdir",
             )?;
         }
-        Ok(dest_store)
+        // History/tags for a `--subdir` import aren't preserved, so there's no continuous
+        // relationship with an origin to fast-forward from later — `Copied` here is
+        // arbitrary; `Library::fetch` records `subdir` regardless of mechanism, and any
+        // source with `subdir` set is never updatable (see `crate::library::Library::update`).
+        Ok((dest_store, crate::source::AdoptionMechanism::Copied))
     }
 
     pub fn root(&self) -> &Path {
@@ -490,10 +508,20 @@ fn collect_names(root: &Path, dir: &Path, names: &mut BTreeSet<String>) -> Resul
         let path = entry.path();
         if path.is_dir() {
             collect_names(root, &path, names)?;
-        } else if let Ok(rel) = path.strip_prefix(root)
-            && let Some(name) = rel.to_str()
-        {
-            names.insert(name.to_string());
+        } else if let Ok(rel) = path.strip_prefix(root) {
+            // Always join with `/`, not `Path`'s platform separator: `name` is used both as
+            // a filesystem-joinable id (`abs_path`, where `/` works fine on Windows too) and
+            // as a git tree path (`git_path`), and as the key `Library`'s merge matches
+            // across sources by exact string equality — a `\`-joined name on Windows would
+            // silently fail that lookup even though the file exists.
+            let name: String = rel
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/");
+            if !name.is_empty() {
+                names.insert(name);
+            }
         }
     }
     Ok(())
