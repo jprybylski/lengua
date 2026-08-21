@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-21
+
+### Added
+
+- Tags: `tag add`/`list`/`rm` name a specific revision of a template without duplicating content, stored as `refs/lengua/tags/<template>/<tag>` (not real git tags, which are repo-wide) - the same tag name can independently exist on several templates, and `tag add --rev <revision>` retroactively tags a prior revision. Tag names now work anywhere a revision is accepted (`get --rev`, `diff`).
+- `init --from-dir`/`--from-repo` (with `--ref`, `--subdir`, `--force`) adopts an existing store instead of only ever starting empty, mirroring `--from-repo`'s `"[host/]owner/repo[/subdir][@ref]"` shorthand from the sibling `quartifyr`/`deckifyr` projects (host defaults to `github.com`; an explicit host reaches GitHub Enterprise).
+- New `docs/consuming.md` walkthrough for pulling down and using an existing shared template library.
+- The CLI now has color (green/red for diff lines, red for errors, cyan for tag names, bold for headings, dim for metadata), respecting `NO_COLOR`/`CLICOLOR`/`CLICOLOR_FORCE`. `--json` output is unaffected.
+
+### Fixed
+
+- `Store::open` now refuses to open a directory that isn't a lengua store (no `templates/` dir), instead of silently committing template blobs into whatever git repo happened to be at that path - including a user's own project, if lengua were run there by mistake.
+
 ## [0.1.3] - 2026-08-21
 
 ### Added
