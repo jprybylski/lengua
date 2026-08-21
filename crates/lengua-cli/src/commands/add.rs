@@ -2,7 +2,7 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result, anyhow};
-use lengua_core::{Store, frontmatter};
+use lengua_core::{Library, frontmatter};
 use serde::Serialize;
 use serde_yaml::Value;
 
@@ -24,9 +24,10 @@ pub fn run(
     title: Option<String>,
     fields: &[String],
     message: &str,
+    source: Option<String>,
     json: bool,
 ) -> Result<()> {
-    let store = Store::open(store_path)?;
+    let library = Library::open(store_path)?;
 
     let input = match file {
         Some(path) => {
@@ -55,7 +56,7 @@ pub fn run(
         meta.fields.insert(k, Value::String(v));
     }
 
-    let commit = store.add(name, &meta, &parsed.body, message)?;
+    let commit = library.add(source.as_deref(), name, &meta, &parsed.body, message)?;
 
     if json {
         print_json(&AddOutput {

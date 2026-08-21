@@ -48,6 +48,31 @@ pub enum Error {
 
     #[error("no tag '{tag}' on '{name}'")]
     TagNotFound { name: String, tag: String },
+
+    #[error(
+        "'{0}' doesn't look like a lengua library (no .lengua/sources.toml) — pass --store <path>, or run `lengua init` here first"
+    )]
+    NotALibrary(PathBuf),
+
+    #[error("couldn't read sources manifest at {path}: {reason}")]
+    SourcesManifest { path: PathBuf, reason: String },
+
+    #[error("no source named '{name}'")]
+    UnknownSource { name: String },
+
+    #[error("multiple sources exist ({candidates}) — pass --source <name> to pick one")]
+    AmbiguousSource { candidates: String },
+
+    #[error("a source named '{name}' already exists — pass --name to pick a different one")]
+    DuplicateSourceName { name: String },
+
+    #[error("source '{name}' can't be updated: {reason}")]
+    SourceNotUpdatable { name: String, reason: String },
+
+    #[error(
+        "source '{name}' has diverged from its origin and can't be fast-forwarded — resolve manually or re-fetch it fresh"
+    )]
+    NotFastForward { name: String },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

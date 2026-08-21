@@ -24,8 +24,9 @@ fn init_creates_a_store() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Initialized"));
-    assert!(dir.path().join(".git").is_dir());
-    assert!(dir.path().join("templates").is_dir());
+    assert!(dir.path().join(".lengua/sources.toml").is_file());
+    assert!(dir.path().join(".lengua/local/.git").is_dir());
+    assert!(dir.path().join(".lengua/local/templates").is_dir());
 }
 
 #[test]
@@ -318,5 +319,100 @@ fn running_outside_a_store_fails_with_a_clear_error() {
         .write_stdin("Hi!\n")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("doesn't look like a lengua store"));
+        .stderr(predicate::str::contains(
+            "doesn't look like a lengua library",
+        ));
+}
+
+#[test]
+fn fetch_on_a_non_initialized_dir_errors_with_guidance() {
+    let source = tempfile::tempdir().unwrap();
+    init_store(source.path());
+
+    let dir = tempfile::tempdir().unwrap();
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["fetch", "--from-dir"])
+        .arg(source.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("lengua init"));
+}
+
+#[test]
+fn fetch_appends_a_second_source() {
+    let dir = tempfile::tempdir().unwrap();
+    init_store(dir.path());
+
+    let source = tempfile::tempdir().unwrap();
+    init_store(source.path());
+    lengua()
+        .arg("--store")
+        .arg(source.path())
+        .args(["add", "hello.md"])
+        .write_stdin("Hi {{ name }}!\n")
+        .assert()
+        .success();
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["fetch", "--from-dir"])
+        .arg(source.path())
+        .args(["--name", "extra"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("extra"));
+
+    assert!(dir.path().join(".lengua/extra/.git").is_dir());
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["get", "hello.md", "--var", "name=Ada", "--source", "extra"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Hi Ada!"));
+}
+
+#[test]
+fn add_with_multiple_sources_and_no_source_flag_fails_clearly() {
+    let dir = tempfile::tempdir().unwrap();
+    init_store(dir.path());
+
+    let source = tempfile::tempdir().unwrap();
+    init_store(source.path());
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["fetch", "--from-dir"])
+        .arg(source.path())
+        .args(["--name", "extra"])
+        .assert()
+        .success();
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["add", "hello.md"])
+        .write_stdin("Hi!\n")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--source"));
+}
+
+#[test]
+fn update_on_a_local_only_library_reports_informationally() {
+    let dir = tempfile::tempdir().unwrap();
+    init_store(dir.path());
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["update"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("not-updatable"));
 }

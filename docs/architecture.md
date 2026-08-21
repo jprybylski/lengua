@@ -32,10 +32,41 @@ the crate a future R binding (see [lenguar](https://github.com/jprybylski/lengua
 against directly, so it stays a clean library with a stable, documented `Result`/`Error` type
 rather than anything CLI-shaped.
 
+## Libraries and sources
+
+A `--store` points at a **library**: a directory containing `.lengua/`, which holds a
+`sources.toml` manifest plus one or more named **sources** at `.lengua/<name>/`. This two-level
+split exists to support pooling templates from several independent stores into one library
+without merging their git history — a project that doesn't want to maintain its own templates
+can still `fetch` several existing ones and query across all of them.
+
+`lengua_core::Library` owns the manifest and every source's `Store`, and is what `lengua-cli`
+actually calls:
+
+- **`init`** creates `.lengua/` with one source (empty, or adopted via `--from-dir`/
+  `--from-repo`). **`fetch`** appends another source to an existing library, using the same
+  adoption flags. **`update`** refreshes a source from its recorded origin via a git
+  fetch-and-fast-forward — never a hard reset, so a diverged source fails loudly instead of
+  losing anything.
+- **Merged reads** (`get`, `list`, `search` with no `--source`) resolve a name across every
+  source with **last-fetched-wins** precedence; a name defined in more than one source always
+  produces a warning (printed at `fetch` time and again whenever a shadowed name is resolved),
+  never a silent choice. `--source <NAME>` reads one source directly, bypassing the merge —
+  the only way to reach a shadowed copy.
+- **Writes** (`add`) and the inherently single-source `log`/`diff`/`tag` need one unambiguous
+  target: the sole source if there's only one, otherwise an explicit `--source`.
+
+`sources.toml` deliberately isn't a lockfile: it records each source's name and how it was
+adopted (`local`, a filesystem `copied` origin, or a `cloned` remote URL/ref) so `update` knows
+which fetch strategy to use, but never a pinned commit id — each source's own `.git` is the
+single authority on what commit it's at, exactly the way a real git checkout works.
+
 ## The store
 
-A `Store` wraps a `gix::Repository` rooted at `--store`, plus the `templates/` directory inside
-it. It deliberately splits reads and writes across two different mechanisms:
+A `Store` (one per source, at `.lengua/<name>/`) wraps a `gix::Repository` rooted at that
+directory, plus the `templates/` directory inside it — the entire on-disk shape a *bare*
+lengua store has always had, unchanged since before the `Library`/multi-source layer existed.
+It deliberately splits reads and writes across two different mechanisms:
 
 - **Current-state reads** (`get`, `list`, `search`) read straight from the **working tree** on
   disk. This is the simple, obvious thing: the working tree *is* the current state, and reading
@@ -51,6 +82,11 @@ This is a deliberate simplification: a design that read *everything* through git
 (including `list`/`search`) would be more "pure," but meaningfully more code for no behavioral
 difference in the common case, since `add` is the only thing that can make the working tree and
 `HEAD` diverge, and `lengua` doesn't expose any way to edit the working tree outside of `add`.
+
+Because a bare `Store`'s shape never changed, adopting an *existing*, already-published lengua
+store as a new source (`fetch --from-repo ...`) needs no git-history rewriting at all — only
+where it's checked out locally (nested under `.lengua/<name>/` instead of at `--store`'s root)
+is new.
 
 ## Templates on disk
 

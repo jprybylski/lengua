@@ -16,34 +16,64 @@ fn main() {
             from_repo,
             r#ref,
             subdir,
+            name,
             force,
-        } => commands::init(&cli.store, from_dir, from_repo, r#ref, subdir, force, json),
+        } => commands::init(
+            &cli.store, from_dir, from_repo, r#ref, subdir, name, force, json,
+        ),
+        Command::Fetch {
+            from_dir,
+            from_repo,
+            r#ref,
+            subdir,
+            name,
+            force,
+        } => commands::fetch(
+            &cli.store, from_dir, from_repo, r#ref, subdir, name, force, json,
+        ),
+        Command::Update { source } => commands::update(&cli.store, source, json),
         Command::Add {
             name,
             file,
             title,
             fields,
             message,
-        } => commands::add(&cli.store, &name, file, title, &fields, &message, json),
+            source,
+        } => commands::add(
+            &cli.store, &name, file, title, &fields, &message, source, json,
+        ),
         Command::Get {
             name,
             vars,
             raw,
             rev,
-        } => commands::get(&cli.store, &name, &vars, raw, rev, json),
-        Command::List => commands::list(&cli.store, json),
-        Command::Search { fields } => commands::search(&cli.store, &fields, json),
-        Command::Log { name } => commands::log(&cli.store, &name, json),
-        Command::Diff { name, from, to } => commands::diff(&cli.store, &name, &from, &to, json),
+            source,
+        } => commands::get(&cli.store, &name, &vars, raw, rev, source, json),
+        Command::List { source } => commands::list(&cli.store, source, json),
+        Command::Search { fields, source } => commands::search(&cli.store, &fields, source, json),
+        Command::Log { name, source } => commands::log(&cli.store, &name, source, json),
+        Command::Diff {
+            name,
+            from,
+            to,
+            source,
+        } => commands::diff(&cli.store, &name, &from, &to, source, json),
         Command::Tag { action } => match action {
             TagAction::Add {
                 template,
                 tag,
                 rev,
                 force,
-            } => commands::tag_add(&cli.store, &template, &tag, rev, force, json),
-            TagAction::List { template } => commands::tag_list(&cli.store, &template, json),
-            TagAction::Rm { template, tag } => commands::tag_rm(&cli.store, &template, &tag, json),
+                source,
+            } => commands::tag_add(&cli.store, &template, &tag, rev, force, source, json),
+            TagAction::List { template, source } => {
+                commands::tag_list(&cli.store, &template, source, json)
+            }
+            TagAction::Rm {
+                template,
+                tag,
+                source,
+            } => commands::tag_rm(&cli.store, &template, &tag, source, json),
         },
     };
 

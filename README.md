@@ -5,8 +5,9 @@ LaTeX, or code snippets, tagged with YAML/TOML frontmatter and rendered with
 [minijinja](https://github.com/mitsuhiko/minijinja) (Jinja2-style) variables.
 
 `lengua` is a persistent, queryable library of atomic templates — not a
-project scaffolder. Every template lives as a file with frontmatter under
-`templates/`, versioned by an ordinary git repository the tool manages for you.
+project scaffolder. Every template lives as a file with frontmatter under a
+`.lengua/<source>/templates/` directory, versioned by an ordinary git repository the tool
+manages for you — a library can pool more than one such source together.
 
 ## Status
 
