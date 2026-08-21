@@ -21,15 +21,18 @@ Download the archive for your platform from the [latest release](https://github.
 extract it, and put `lengua` on your `PATH`:
 
 ```bash
-tar -xzf lengua-x86_64-apple-darwin.tar.gz
+tar -xzf lengua_0.1.2_darwin_arm64.tar.gz
 install lengua /usr/local/bin/lengua
 ```
 
 Prebuilt archives are published for:
 
-- `x86_64-unknown-linux-gnu`
-- `x86_64-apple-darwin`
-- `aarch64-apple-darwin`
+| Platform | Asset |
+|---|---|
+| Linux (x86_64) | `lengua_<version>_linux_amd64.tar.gz` |
+| macOS (Intel) | `lengua_<version>_darwin_amd64.tar.gz` |
+| macOS (Apple Silicon) | `lengua_<version>_darwin_arm64.tar.gz` |
+| Windows (x86_64) | `lengua_<version>_windows_amd64.zip` |
 
 ## From source
 

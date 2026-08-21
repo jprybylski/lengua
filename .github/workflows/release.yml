@@ -69,15 +69,26 @@ jobs:
     strategy:
       matrix:
         include:
+          # Asset names follow `lengua_<version>_<os>_<arch>` (matching
+          # jprybylski/datum's goreleaser convention) rather than raw Rust
+          # target triples - a user deciding whether to trust a prebuilt
+          # binary shouldn't have to know what "unknown-linux-gnu" means.
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            asset: lengua-x86_64-unknown-linux-gnu
+            asset_os: linux
+            asset_arch: amd64
           - os: macos-latest
             target: x86_64-apple-darwin
-            asset: lengua-x86_64-apple-darwin
+            asset_os: darwin
+            asset_arch: amd64
           - os: macos-latest
             target: aarch64-apple-darwin
-            asset: lengua-aarch64-apple-darwin
+            asset_os: darwin
+            asset_arch: arm64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset_os: windows
+            asset_arch: amd64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -87,13 +98,20 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release --package lengua-cli --target ${{ matrix.target }}
       - name: Package binary
+        shell: bash
+        env:
+          ASSET: lengua_${{ needs.prepare.outputs.version }}_${{ matrix.asset_os }}_${{ matrix.asset_arch }}
         run: |
           mkdir -p dist
-          tar -czf "dist/${{ matrix.asset }}.tar.gz" -C "target/${{ matrix.target }}/release" lengua
+          if [ "${{ matrix.asset_os }}" = "windows" ]; then
+            7z a "dist/$ASSET.zip" "./target/${{ matrix.target }}/release/lengua.exe"
+          else
+            tar -czf "dist/$ASSET.tar.gz" -C "target/${{ matrix.target }}/release" lengua
+          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
-          path: dist/${{ matrix.asset }}.tar.gz
+          name: lengua_${{ needs.prepare.outputs.version }}_${{ matrix.asset_os }}_${{ matrix.asset_arch }}
+          path: dist/*
 
   publish:
     needs: [prepare, build]
@@ -117,6 +135,6 @@ jobs:
             --repo "${{ github.repository }}" \
             --title "${{ needs.prepare.outputs.tag }}" \
             --notes-file artifacts/release-notes/release_notes.md \
-            artifacts/lengua-*/*.tar.gz
+            artifacts/lengua_*/*
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

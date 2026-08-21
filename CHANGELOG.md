@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-21
+
+### Added
+
+- Release binaries now also published for Windows (`x86_64-pc-windows-msvc`).
+
+### Changed
+
+- Release asset names now follow `lengua_<version>_<os>_<arch>` (e.g. `lengua_0.1.3_linux_amd64.tar.gz`), matching `datum`'s convention, instead of raw Rust target triples (`lengua-x86_64-unknown-linux-gnu.tar.gz`).
+
 ## [0.1.2] - 2026-08-21
 
 ### Fixed
