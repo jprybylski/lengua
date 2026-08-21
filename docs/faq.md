@@ -1,7 +1,7 @@
 ---
 layout: default
 title: FAQ
-nav_order: 5
+nav_order: 6
 ---
 
 # FAQ
@@ -48,3 +48,26 @@ It's a deliberate v1 simplification — see
 In the store's own `.git` directory — `log`/`diff` walk real git commits made by `add`, they
 aren't a separate change-tracking mechanism. You can `cd` into a store and run ordinary `git
 log -- templates/<name>` and see the same history.
+
+## How is a tag different from a git tag?
+
+`git tag` creates a ref under `refs/tags/<name>` — one namespace shared by the whole repo, so
+you can't have two different templates each with their own `"final"` tag pointing at different
+commits. lengua's tags live under `refs/lengua/tags/<template>/<tag>` instead: a separate
+namespace, scoped per template, that `lengua tag`/`get --rev`/`diff` read and write directly via
+`gix` (never `git tag` itself). They show up in `git for-each-ref refs/lengua/` if you want to
+inspect them with plain git, but ordinary `git tag -l` won't list them.
+
+## What happens if I run lengua inside my own project's git repo?
+
+`--store` defaults to the current directory, and lengua opens whatever `.git` it finds there —
+so running a command with no `--store` from inside a directory that's *already* your own
+project's git repo, but isn't a lengua store, is a real risk: without a check, lengua would
+happily commit `templates/...` blobs straight into your project's history.
+
+lengua guards against this: every command except `init` refuses to operate on a directory that
+doesn't already have a `templates/` folder, with an error telling you to pass `--store` or run
+`init` first. The guard is a heuristic (a directory that happens to have an unrelated top-level
+`templates/` folder would slip past it), so the safest layout is still to keep your template
+store in its own dedicated directory — a sibling of your project, not nested inside it — and
+always pass `--store` explicitly if it *is* nested, rather than relying on the default `.`.

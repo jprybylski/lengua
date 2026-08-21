@@ -86,6 +86,7 @@ Ready for more? See [Commands]({{ '/commands.html' | relative_url }}) for the fu
 | Page | What's there |
 |---|---|
 | [Installation]({{ '/installation.html' | relative_url }}) | Building from source, installing a release binary |
-| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `add` / `get` / `list` / `search` / `log` / `diff`, flags, `--json` shapes |
+| [Consuming an existing library]({{ '/consuming.html' | relative_url }}) | Pulling down a shared library with `init --from-dir`/`--from-repo` instead of starting from scratch |
+| [Commands]({{ '/commands.html' | relative_url }}) | `init` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag`, flags, `--json` shapes |
 | [Architecture]({{ '/architecture.html' | relative_url }}) | Crate layout, the git-backed store design, what was deliberately left out |
 | [FAQ]({{ '/faq.html' | relative_url }}) | Common questions |

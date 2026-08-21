@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Commands
-nav_order: 3
+nav_order: 4
 ---
 
 # Commands
@@ -32,7 +32,9 @@ into `jq`, an editor extension, or an AI agent.
 ## `init`
 
 Create a new template-library git repo at `--store` (a bare `git init` plus an empty
-`templates/` directory).
+`templates/` directory) — or adopt an existing one with `--from-dir`/`--from-repo`. See
+[Consuming an existing library]({{ '/consuming.html' | relative_url }}) for the full
+walkthrough.
 
 ```bash
 lengua init --store ./templates-repo
@@ -42,13 +44,24 @@ lengua init --store ./templates-repo
 Initialized empty lengua store at ./templates-repo
 ```
 
+| Flag | Meaning |
+|---|---|
+| `--from-dir <PATH>` | Adopt an existing store from a local directory instead of starting empty. Mutually exclusive with `--from-repo`. |
+| `--from-repo <SPEC>` | Adopt an existing store by cloning it. `SPEC` is a full git URL, or `[host/]owner/repo[/subdir][@ref]` shorthand — host defaults to `github.com`, so an explicit host is how GitHub Enterprise is supported. Mutually exclusive with `--from-dir`. |
+| `--ref <REF>` | Branch or tag to check out (not a commit id). Only valid with `--from-repo`; overrides any `@ref` embedded in its shorthand. |
+| `--subdir <PATH>` | Import only this subdirectory of the resolved source as the new store. Overrides any subdirectory embedded in `--from-repo`'s shorthand. **Imports current content only** — see the table in [Consuming an existing library]({{ '/consuming.html' | relative_url }}). |
+| `--force` | With `--subdir`, allow re-importing into a store that already exists, overwriting templates with the same name. |
+
 `--json`:
 
 ```json
 { "status": "initialized", "path": "./templates-repo" }
 ```
 
-Fails if `--store` already contains a `.git` directory.
+`status` is `"adopted"` instead of `"initialized"` when `--from-dir`/`--from-repo` is used.
+
+Fails if `--store` already contains a `.git` directory (with `--subdir`, pass `--force` to
+re-import into it instead).
 
 ---
 
@@ -98,6 +111,7 @@ lengua get letters/thank-you.md --var name=Ada --var reason="the review"
 | `<NAME>` | Template name |
 | `--var <KEY=VALUE>` | Template variable; repeatable |
 | `--raw` | Print the raw, unrendered body instead |
+| `--rev <REV>` | Read the template as it existed at this revision instead of the working tree — a [tag](#tag) name, or any revspec `gix` understands (`HEAD`, `HEAD~1`, a commit sha) |
 
 `--json`:
 
@@ -205,3 +219,79 @@ lengua diff letters/thank-you.md HEAD~1 HEAD
 ```
 
 `tag` is one of `equal`, `insert`, `delete`.
+
+---
+
+## `tag`
+
+<div class="tape">
+  <img src="{{ '/assets/img/tag.gif' | relative_url }}" alt="lengua tag add, list, and rm demo" />
+</div>
+
+Named pointers to a specific revision of a single template. **These are not git tags** —
+`git tag` creates a repo-wide ref under `refs/tags/`, but lengua's tags live under
+`refs/lengua/tags/<template>/<tag>`, scoped to one template, so the same tag name (e.g.
+`"final"`) can exist independently on several templates without colliding. See
+[FAQ: How is a tag different from a git tag?]({{ '/faq.html#how-is-a-tag-different-from-a-git-tag' | relative_url }})
+for more.
+
+A tag name anywhere `get --rev` or `diff`'s `FROM`/`TO` accept a revision works — tags are
+tried first, falling back to any revspec `gix` understands.
+
+### `tag add`
+
+Point a tag at a template's current revision, or at `--rev` — this is how you retroactively tag
+a *prior* revision, e.g. tagging the version before your latest edit:
+
+```bash
+lengua tag add letters/thank-you.md tense-future
+lengua tag add letters/thank-you.md tense-past --rev HEAD~1
+```
+
+| Flag | Meaning |
+|---|---|
+| `<TEMPLATE>` | Template name |
+| `<TAG>` | Tag name |
+| `--rev <REV>` | Revision to tag instead of the current `HEAD` |
+| `--force` | Overwrite the tag if it already exists |
+
+Refuses to overwrite an existing tag without `--force`. Tag names can't be `HEAD` (any casing)
+or look like a commit id — both would be ambiguous as a revision.
+
+`--json`:
+
+```json
+{ "tag": "tense-future", "commit": "<full commit sha>" }
+```
+
+### `tag list`
+
+```bash
+lengua tag list letters/thank-you.md
+```
+
+```
+tense-future  a1b2c3d4e5f6
+tense-past    9f8e7d6c5b4a
+```
+
+`--json`:
+
+```json
+[
+  { "tag": "tense-future", "commit": "<full sha>" },
+  { "tag": "tense-past", "commit": "<full sha>" }
+]
+```
+
+### `tag rm`
+
+```bash
+lengua tag rm letters/thank-you.md tense-past
+```
+
+`--json`:
+
+```json
+{ "status": "removed", "template": "letters/thank-you.md", "tag": "tense-past" }
+```

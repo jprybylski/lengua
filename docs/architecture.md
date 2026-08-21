@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Architecture
-nav_order: 4
+nav_order: 5
 ---
 
 # Architecture
@@ -73,6 +73,23 @@ Frontmatter parsing/writing (`lengua_core::frontmatter`) uses
 writing, round-tripping through a typed `TemplateMeta { title: Option<String>, fields: BTreeMap<String, serde_yaml::Value> }`
 so `title` gets first-class treatment (surfaced in `list`/`search`) while every other field is
 free-form.
+
+## Tags: `refs/lengua/tags/*`
+
+`lengua tag` implements named revisions as custom git refs, not `git tag`. Each tag lives at
+`refs/lengua/tags/<template>/<tag>`, written/read/listed/deleted directly through `gix`'s
+reference API (`repo.reference(...)`, `repo.references()?.prefixed(...)`,
+`repo.edit_reference(...)`) — never `refs/tags/*`, which is git's own repo-wide tag namespace
+and can't be scoped per template. Keeping tags in their own namespace also means `init
+--from-repo`/`--from-dir` has to fetch them explicitly: a plain clone only brings across
+branches and `refs/tags/*`, so cloning adds `refs/lengua/tags/*:refs/lengua/tags/*` as an extra
+fetch refspec (see [`source::clone_direct`](https://github.com/jprybylski/lengua/blob/main/crates/lengua-core/src/source.rs))
+to carry tags across along with history.
+
+Revision resolution (`read_at_revision`, used by `get --rev` and `diff`) tries a template-scoped
+tag lookup first, falling through to `rev_parse_single` (any revspec `gix` understands) if no
+such tag exists — so a tag name is just another valid revision selector everywhere a revspec is
+accepted, with no separate CLI syntax.
 
 ## What was deliberately left out
 

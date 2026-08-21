@@ -27,17 +27,21 @@ Run this whenever a change touches anything a tape's terminal output would show:
    setup scripts reference repo-relative paths like `docs/assets/tapes/*-setup.sh`, so the
    working directory matters):
    ```bash
-   PATH="$PWD/target/release:$PATH" vhs docs/assets/tapes/quickstart.tape
-   PATH="$PWD/target/release:$PATH" vhs docs/assets/tapes/history.tape
+   for tape in docs/assets/tapes/*.tape; do
+     PATH="$PWD/target/release:$PATH" vhs "$tape"
+   done
    ```
+   (`json.tape` additionally requires `jq` on `PATH`; `guard-error.tape`'s setup script requires
+   `git`.)
 
 4. **Report what changed**, not just "done":
    ```bash
    git status --short docs/assets/img/
    ```
-   GIFs are binary, so there's no useful `git diff` — list which of the 2 changed and which
-   didn't. An unchanged GIF for a tape whose underlying output *did* change is worth flagging
-   back to the user, since it usually means that tape doesn't exercise the changed code path.
+   GIFs are binary, so there's no useful `git diff` — list which of the tapes' GIFs changed and
+   which didn't. An unchanged GIF for a tape whose underlying output *did* change is worth
+   flagging back to the user, since it usually means that tape doesn't exercise the changed code
+   path.
 
 5. Leave the refreshed GIFs staged/modified in the working tree for the user (or the calling
    agent) to review and commit — don't commit automatically.
