@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-21
+
+### Fixed
+
+- `add` no longer fails with `Author identity is not configured` when no git identity (`user.name`/`user.email`, or `GIT_AUTHOR_*`/`GIT_COMMITTER_*`) is set anywhere in the environment - found on a fresh CI runner, but affects any machine without git configured. Falls back to a fixed `lengua <lengua@localhost>` identity when none is configured, and still uses the real one when it is.
+
 ## [0.1.1] - 2026-08-21
 
 ### Fixed

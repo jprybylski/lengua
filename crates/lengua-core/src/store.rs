@@ -114,8 +114,33 @@ impl Store {
             Ok(id) => vec![id.detach()],
             Err(_) => Vec::new(),
         };
+        // Don't rely on gix's automatic author/committer resolution: it errors out
+        // entirely if the environment has no git identity configured at all (no
+        // ~/.gitconfig, no GIT_*_NAME/EMAIL), which is the default state on a fresh
+        // CI runner and for plenty of real users who've never run `git config
+        // user.name`. lengua's commits aren't meant to represent human authorship
+        // (they're just delta storage for a template's history), so fall back to a
+        // fixed synthetic identity rather than failing `add` outright.
+        let sig = repo
+            .committer()
+            .and_then(|r| r.ok())
+            .map(Into::into)
+            .unwrap_or_else(|| gix::actor::Signature {
+                name: "lengua".into(),
+                email: "lengua@localhost".into(),
+                time: gix::date::Time::now_local_or_utc(),
+            });
+        let mut author_buf = gix::date::parse::TimeBuf::default();
+        let mut committer_buf = gix::date::parse::TimeBuf::default();
         let commit_id = repo
-            .commit("HEAD", message, tree_id.detach(), parents)
+            .commit_as(
+                sig.to_ref(&mut committer_buf),
+                sig.to_ref(&mut author_buf),
+                "HEAD",
+                message,
+                tree_id.detach(),
+                parents,
+            )
             .map_err(|e| Error::Git(e.to_string()))?;
         Ok(commit_id.detach().to_string())
     }
