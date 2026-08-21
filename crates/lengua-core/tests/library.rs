@@ -387,10 +387,10 @@ fn update_fast_forwards_a_cloned_source() {
     let results = library.update(None);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].0, "remote");
-    assert!(matches!(
-        results[0].1,
-        Ok(UpdateStatus::FastForwarded { .. })
-    ));
+    match &results[0].1 {
+        Ok(UpdateStatus::FastForwarded { .. }) => {}
+        other => panic!("expected FastForwarded, got {other:?} (branch={branch:?})"),
+    }
 
     let library = Library::open(dir.path()).unwrap();
     let (entry, source) = library.get(Some("remote"), "b.md", None).unwrap();
@@ -421,10 +421,10 @@ fn update_fast_forwards_a_copied_source() {
     let results = library.update(None);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].0, "copy");
-    assert!(matches!(
-        results[0].1,
-        Ok(UpdateStatus::FastForwarded { .. })
-    ));
+    match &results[0].1 {
+        Ok(UpdateStatus::FastForwarded { .. }) => {}
+        other => panic!("expected FastForwarded, got {other:?}"),
+    }
 
     let library = Library::open(dir.path()).unwrap();
     let (entry, source) = library.get(Some("copy"), "b.md", None).unwrap();
