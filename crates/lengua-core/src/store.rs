@@ -508,10 +508,20 @@ fn collect_names(root: &Path, dir: &Path, names: &mut BTreeSet<String>) -> Resul
         let path = entry.path();
         if path.is_dir() {
             collect_names(root, &path, names)?;
-        } else if let Ok(rel) = path.strip_prefix(root)
-            && let Some(name) = rel.to_str()
-        {
-            names.insert(name.to_string());
+        } else if let Ok(rel) = path.strip_prefix(root) {
+            // Always join with `/`, not `Path`'s platform separator: `name` is used both as
+            // a filesystem-joinable id (`abs_path`, where `/` works fine on Windows too) and
+            // as a git tree path (`git_path`), and as the key `Library`'s merge matches
+            // across sources by exact string equality — a `\`-joined name on Windows would
+            // silently fail that lookup even though the file exists.
+            let name: String = rel
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/");
+            if !name.is_empty() {
+                names.insert(name);
+            }
         }
     }
     Ok(())
