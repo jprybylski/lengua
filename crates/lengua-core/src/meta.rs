@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// library doesn't need to know the metadata schema in advance.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct TemplateMeta {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(flatten)]
     pub fields: BTreeMap<String, serde_yaml::Value>,

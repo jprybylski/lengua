@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-21
+
+### Fixed
+
+- `TemplateMeta`: templates with no title no longer get a spurious `title: null` written into their frontmatter block.
+
 ## [0.1.0] - 2026-08-21
 
 ### Added
