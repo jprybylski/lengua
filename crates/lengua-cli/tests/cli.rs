@@ -199,3 +199,124 @@ fn get_missing_template_fails_with_nonzero_exit() {
         .assert()
         .failure();
 }
+
+#[test]
+fn tag_add_list_rm_roundtrip_and_retroactive_tagging() {
+    let dir = tempfile::tempdir().unwrap();
+    init_store(dir.path());
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["add", "letter.md", "--message", "past tense"])
+        .write_stdin("We had so much fun.\n")
+        .assert()
+        .success();
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["add", "letter.md", "--message", "future tense"])
+        .write_stdin("We will have so much fun.\n")
+        .assert()
+        .success();
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["tag", "add", "letter.md", "tense-future"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tense-future"));
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["tag", "add", "letter.md", "tense-past", "--rev", "HEAD~1"])
+        .assert()
+        .success();
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["tag", "list", "letter.md"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("tense-future").and(predicate::str::contains("tense-past")),
+        );
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["get", "letter.md", "--rev", "tense-past"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("We had so much fun."));
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["get", "letter.md", "--rev", "tense-future"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("We will have so much fun."));
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["tag", "rm", "letter.md", "tense-past"])
+        .assert()
+        .success();
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["tag", "list", "letter.md"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("tense-past").not());
+}
+
+#[test]
+fn init_from_dir_adopts_an_existing_store() {
+    let source = tempfile::tempdir().unwrap();
+    init_store(source.path());
+    lengua()
+        .arg("--store")
+        .arg(source.path())
+        .args(["add", "hello.md"])
+        .write_stdin("Hi {{ name }}!\n")
+        .assert()
+        .success();
+
+    let parent = tempfile::tempdir().unwrap();
+    let dest = parent.path().join("adopted");
+    lengua()
+        .arg("--store")
+        .arg(&dest)
+        .args(["init", "--from-dir"])
+        .arg(source.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Adopted"));
+
+    lengua()
+        .arg("--store")
+        .arg(&dest)
+        .args(["get", "hello.md", "--var", "name=Ada"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Hi Ada!"));
+}
+
+#[test]
+fn running_outside_a_store_fails_with_a_clear_error() {
+    let dir = tempfile::tempdir().unwrap();
+    gix::init(dir.path()).unwrap();
+
+    lengua()
+        .arg("--store")
+        .arg(dir.path())
+        .args(["add", "hello.md"])
+        .write_stdin("Hi!\n")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("doesn't look like a lengua store"));
+}

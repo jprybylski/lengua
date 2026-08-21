@@ -2,7 +2,7 @@ use anyhow::Result;
 use lengua_core::Store;
 use serde::Serialize;
 
-use crate::output::print_json;
+use crate::output::{dim, print_json};
 
 #[derive(Serialize)]
 struct LogRow {
@@ -27,9 +27,9 @@ pub fn run(store_path: &std::path::Path, name: &str, json: bool) -> Result<()> {
         println!("(no history)");
     } else {
         for row in &rows {
-            println!(
+            anstream::println!(
                 "{}  {}",
-                &row.commit[..row.commit.len().min(12)],
+                dim(&row.commit[..row.commit.len().min(12)]),
                 row.message
             );
         }

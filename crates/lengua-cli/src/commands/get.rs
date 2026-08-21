@@ -18,10 +18,14 @@ pub fn run(
     name: &str,
     vars: &[String],
     raw: bool,
+    rev: Option<String>,
     json: bool,
 ) -> Result<()> {
     let store = Store::open(store_path)?;
-    let entry = store.get(name)?;
+    let entry = match &rev {
+        Some(rev) => store.get_at_revision(name, rev)?,
+        None => store.get(name)?,
+    };
 
     let rendered = if raw {
         entry.body.clone()

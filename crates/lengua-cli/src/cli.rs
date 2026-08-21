@@ -23,8 +23,39 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// Initialize a new template-library git repo.
-    Init,
+    /// Initialize a new template-library git repo, optionally adopting an
+    /// existing one instead of starting empty.
+    Init {
+        /// Adopt an existing store from a local directory instead of
+        /// starting empty. Mutually exclusive with `--from-repo`.
+        #[arg(long, conflicts_with = "from_repo")]
+        from_dir: Option<PathBuf>,
+
+        /// Adopt an existing store by cloning it from a git URL (or
+        /// `[host/]owner/repo[/subdir][@ref]` shorthand — host defaults to
+        /// github.com, so an explicit host is how GitHub Enterprise is
+        /// supported). Mutually exclusive with `--from-dir`.
+        #[arg(long, conflicts_with = "from_dir")]
+        from_repo: Option<String>,
+
+        /// Branch or tag to check out (not a commit id). Only valid with
+        /// `--from-repo`; overrides any `@ref` embedded in its shorthand.
+        #[arg(long, requires = "from_repo")]
+        r#ref: Option<String>,
+
+        /// Import only this subdirectory of the resolved source as the new
+        /// store, rather than the whole thing. Overrides any subdirectory
+        /// embedded in `--from-repo`'s shorthand. Note: this imports the
+        /// subdirectory's *current* content only — the source's history
+        /// and any tags under it are not preserved.
+        #[arg(long)]
+        subdir: Option<String>,
+
+        /// With `--subdir`, allow re-importing into a store that already
+        /// exists, overwriting templates with the same name.
+        #[arg(long)]
+        force: bool,
+    },
 
     /// Add or update a template, committing the change.
     Add {
@@ -54,6 +85,11 @@ pub enum Command {
         /// Print the raw (unrendered) body instead of rendering it.
         #[arg(long)]
         raw: bool,
+        /// Read the template as it existed at this revision (a lengua tag
+        /// name, or any revspec gix understands, e.g. `HEAD~1`) instead of
+        /// the working tree.
+        #[arg(long)]
+        rev: Option<String>,
     },
 
     /// List all templates in the store.
@@ -76,6 +112,35 @@ pub enum Command {
         #[arg(default_value = "HEAD")]
         to: String,
     },
+
+    /// Manage named pointers to a specific revision of a template. These
+    /// are lengua's own tags (`refs/lengua/tags/<template>/<tag>`), not git
+    /// tags, so the same tag name can exist independently on several
+    /// templates.
+    Tag {
+        #[command(subcommand)]
+        action: TagAction,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum TagAction {
+    /// Point a tag at a template's current revision (or `--rev`).
+    Add {
+        template: String,
+        tag: String,
+        /// Revision to tag instead of the current `HEAD`, e.g. `HEAD~1` —
+        /// this is how a *prior* revision gets retroactively tagged.
+        #[arg(long)]
+        rev: Option<String>,
+        /// Overwrite the tag if it already exists.
+        #[arg(long)]
+        force: bool,
+    },
+    /// List every tag on a template.
+    List { template: String },
+    /// Remove a tag from a template.
+    Rm { template: String, tag: String },
 }
 
 /// Parses a repeated `key=value` CLI argument.

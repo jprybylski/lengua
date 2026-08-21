@@ -2,7 +2,7 @@ use anyhow::Result;
 use lengua_core::{DiffTag, Store, diff_text};
 use serde::Serialize;
 
-use crate::output::print_json;
+use crate::output::{deleted, inserted, print_json};
 
 #[derive(Serialize)]
 struct DiffRow {
@@ -37,12 +37,11 @@ pub fn run(
         print_json(&rows);
     } else {
         for row in &rows {
-            let prefix = match row.tag {
-                "insert" => "+ ",
-                "delete" => "- ",
-                _ => "  ",
-            };
-            println!("{prefix}{}", row.line);
+            match row.tag {
+                "insert" => anstream::println!("{}", inserted(&format!("+ {}", row.line))),
+                "delete" => anstream::println!("{}", deleted(&format!("- {}", row.line))),
+                _ => println!("  {}", row.line),
+            }
         }
     }
     Ok(())
