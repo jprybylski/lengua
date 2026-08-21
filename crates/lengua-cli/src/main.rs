@@ -75,6 +75,7 @@ fn main() {
                 source,
             } => commands::tag_rm(&cli.store, &template, &tag, source, json),
         },
+        Command::Skills { directory, force } => commands::skills(&directory, force, json),
     };
 
     if let Err(err) = result {

@@ -193,6 +193,21 @@ pub enum Command {
         #[command(subcommand)]
         action: TagAction,
     },
+
+    /// Export lengua's bundled coding-agent skill files (`SKILL.md`) to a target directory.
+    /// Doesn't touch a library, so `--store` is unused here.
+    Skills {
+        /// Target directory. Each skill lands under its own
+        /// `<directory>/<skill-name>/SKILL.md` subdirectory — point this at
+        /// `.claude/skills` for Claude Code to auto-discover them, or
+        /// anywhere else for a different tool, or just to inspect the
+        /// content.
+        #[arg(default_value = ".")]
+        directory: PathBuf,
+        /// Overwrite an existing `SKILL.md` at the destination.
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 #[derive(Subcommand)]
