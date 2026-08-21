@@ -29,9 +29,24 @@ an LLM/agent if you want to, but lengua itself never calls out to one.
 
 ## What templating syntax does `get` support?
 
-[minijinja](https://github.com/mitsuhiko/minijinja)'s Jinja2-compatible syntax: `{{ variable }}`
-interpolation, filters (`{{ name | upper }}`), defaults (`{{ name | default("there") }}`),
-conditionals, and loops. See minijinja's documentation for the full syntax.
+[minijinja](https://github.com/mitsuhiko/minijinja)'s Jinja2-compatible syntax — `get` calls a
+bare `Environment::render_str` with no custom filters/functions and no autoescaping registered,
+so everything below is minijinja's own stock behavior, not something lengua opts into:
+
+{% raw %}
+- **Interpolation**: `{{ variable }}`.
+- **Filters**: `{{ name | upper }}`, `{{ name | default("there") }}`, `{{ items | join(", ") }}`.
+- **Conditionals**: `{% if tone == "formal" %}Dear{% else %}Hi{% endif %} {{ name }}`.
+- **Loops**: `{% for item in items %}{{ item }}{% endfor %}`.
+- **Arithmetic/comparison**: `{{ count + 1 }}`, `{{ price * qty }}`, `{{ n > 10 }}`.
+- **Escaping**: there's no automatic HTML escaping (output is plain text, not HTML) — minijinja
+  has its own raw-text block tag to emit a literal `{{ }}` in rendered output instead of having
+  it interpreted (see minijinja's docs for the exact syntax), and an `| escape` filter if you
+  separately need HTML-safe output.
+{% endraw %}
+
+See [Templating guide](https://docs.rs/lengua-core/latest/lengua_core/template/) (rustdoc) for
+a longer walkthrough with more examples, and minijinja's own documentation for the full syntax.
 
 ## Can I use lengua from R?
 

@@ -93,6 +93,7 @@ is new.
 Each template is one file under `templates/`, with YAML frontmatter followed by a
 [minijinja](https://github.com/mitsuhiko/minijinja) body:
 
+{% raw %}
 ```markdown
 ---
 title: Thank You
@@ -103,6 +104,7 @@ Dear {{ name }},
 
 Thank you for {{ reason }}.
 ```
+{% endraw %}
 
 Frontmatter parsing/writing (`lengua_core::frontmatter`) uses
 [`gray_matter`](https://github.com/the-alchemist/gray-matter) for parsing and `serde_yaml` for
