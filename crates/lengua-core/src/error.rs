@@ -34,6 +34,20 @@ pub enum Error {
 
     #[error("store already initialized at {0}")]
     AlreadyInitialized(PathBuf),
+
+    #[error(
+        "'{0}' doesn't look like a lengua store (no templates/ directory) — pass --store <path>, or run `lengua init` here first"
+    )]
+    NotAStore(PathBuf),
+
+    #[error("invalid tag name '{tag}': {reason}")]
+    InvalidTagName { tag: String, reason: String },
+
+    #[error("tag '{tag}' already exists on '{name}' (use --force to overwrite)")]
+    TagAlreadyExists { name: String, tag: String },
+
+    #[error("no tag '{tag}' on '{name}'")]
+    TagNotFound { name: String, tag: String },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
