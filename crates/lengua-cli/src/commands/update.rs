@@ -33,7 +33,12 @@ pub fn run(store_path: &std::path::Path, source: Option<String>, json: bool) -> 
                     &to[..to.len().min(12)]
                 )),
             },
-            Err(err @ Error::NotFastForward { .. }) => {
+            Err(err @ Error::SourceNotUpdatable { .. }) => UpdateRow {
+                source: name,
+                status: "not-updatable".to_string(),
+                detail: Some(err.to_string()),
+            },
+            Err(err) => {
                 hard_failure = true;
                 UpdateRow {
                     source: name,
@@ -41,11 +46,6 @@ pub fn run(store_path: &std::path::Path, source: Option<String>, json: bool) -> 
                     detail: Some(err.to_string()),
                 }
             }
-            Err(err) => UpdateRow {
-                source: name,
-                status: "not-updatable".to_string(),
-                detail: Some(err.to_string()),
-            },
         })
         .collect();
 
