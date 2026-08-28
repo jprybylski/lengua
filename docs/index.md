@@ -92,6 +92,8 @@ Ready for more? See [Commands]({{ '/commands.html' | relative_url }}) for the fu
 |---|---|
 | [Installation]({{ '/installation.html' | relative_url }}) | Building from source, installing a release binary |
 | [Consuming an existing library]({{ '/consuming.html' | relative_url }}) | Pulling down a shared library with `init --from-dir`/`--from-repo`, and pooling more sources with `fetch`/`update` |
+| [End-user guide]({{ '/end-user-guide.html' | relative_url }}) | Advanced consumer workflows: pure-consumer libraries, 3-tier layering, precedence, shadow warnings, and scripting |
+| [Storekeeper guide]({{ '/storekeeper-guide.html' | relative_url }}) | Organization store maintenance: polyrepo/monorepo architecture, metadata governance, semantic tagging, and CI/CD validation |
 | [Commands]({{ '/commands.html' | relative_url }}) | `init` / `fetch` / `update` / `add` / `get` / `list` / `search` / `log` / `diff` / `tag` / `skills`, flags, `--json` shapes |
 | [Architecture]({{ '/architecture.html' | relative_url }}) | Crate layout, the git-backed store design, what was deliberately left out |
 | [FAQ]({{ '/faq.html' | relative_url }}) | Common questions |

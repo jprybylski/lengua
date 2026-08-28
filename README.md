@@ -53,6 +53,15 @@ lengua diff letters/thank-you.md HEAD~1 HEAD
 Every subcommand accepts `--json` for structured, script- and agent-friendly
 output.
 
+## Documentation
+
+Comprehensive guides and command references are available in `docs/` and on the documentation site:
+- [End-user guide](docs/end-user-guide.md) — consuming shared stores, pure-consumer setups, 3-tier layering, and scripting.
+- [Storekeeper guide](docs/storekeeper-guide.md) — organization store management, polyrepo/monorepo layouts, semantic tagging, and CI/CD validation.
+- [Consuming an existing library](docs/consuming.md) — quickstart for `init --from-repo` and `fetch`.
+- [Commands reference](docs/commands.md) — complete flag and JSON schema reference.
+- [Architecture](docs/architecture.md) — internal design, storage model, and error handling.
+
 ## Workspace layout
 
 - `crates/lengua-core` — the engine: templating, frontmatter, git-backed

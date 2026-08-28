@@ -58,7 +58,9 @@ mod tests {
     #[test]
     fn every_skill_name_has_a_checked_in_directory() {
         for (name, _) in SKILLS.iter().copied() {
-            let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("skills").join(name);
+            let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("skills")
+                .join(name);
             assert!(dir.join("SKILL.md").is_file(), "missing {}", dir.display());
         }
     }

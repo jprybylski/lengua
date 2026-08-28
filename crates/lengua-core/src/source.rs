@@ -282,6 +282,12 @@ pub(crate) fn update_copied(
 
     merge_objects(&origin.join(".git"), &dest_root.join(".git"))?;
 
+    let origin_tags = origin.join(".git").join("refs").join("lengua");
+    let dest_tags = dest_root.join(".git").join("refs").join("lengua");
+    if origin_tags.is_dir() {
+        merge_dir_recursive(&origin_tags, &dest_tags)?;
+    }
+
     let mut repo = gix::open(dest_root).map_err(|e| Error::Git(e.to_string()))?;
     ensure_committer_identity(&mut repo)?;
     let branch = current_branch_name(&repo)?;

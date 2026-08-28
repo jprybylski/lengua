@@ -416,3 +416,192 @@ fn update_on_a_local_only_library_reports_informationally() {
         .success()
         .stdout(predicate::str::contains("not-updatable"));
 }
+
+#[test]
+fn cli_end_user_multi_source_layering_and_shadowing() {
+    // Upstream 1: Corp
+    let corp_dir = tempfile::tempdir().unwrap();
+    init_store(corp_dir.path());
+    lengua()
+        .arg("--store")
+        .arg(corp_dir.path())
+        .args(["add", "notice.md", "--field", "tier=corp"])
+        .write_stdin("Corp notice.\n")
+        .assert()
+        .success();
+    lengua()
+        .arg("--store")
+        .arg(corp_dir.path())
+        .args(["add", "memo.md", "--field", "tier=corp"])
+        .write_stdin("Corp memo.\n")
+        .assert()
+        .success();
+
+    // Upstream 2: Team (overrides memo.md)
+    let team_dir = tempfile::tempdir().unwrap();
+    init_store(team_dir.path());
+    lengua()
+        .arg("--store")
+        .arg(team_dir.path())
+        .args(["add", "memo.md", "--field", "tier=team"])
+        .write_stdin("Team memo.\n")
+        .assert()
+        .success();
+
+    // Upstream 3: Project
+    let proj_dir = tempfile::tempdir().unwrap();
+    init_store(proj_dir.path());
+    lengua()
+        .arg("--store")
+        .arg(proj_dir.path())
+        .args(["add", "spec.md", "--field", "tier=project"])
+        .write_stdin("Project spec.\n")
+        .assert()
+        .success();
+
+    // Consumer initializes from Corp, then fetches Team and Project
+    let consumer_dir = tempfile::tempdir().unwrap();
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["init", "--from-dir"])
+        .arg(corp_dir.path())
+        .args(["--name", "corp"])
+        .assert()
+        .success();
+
+    // Fetch team -> should report warning about memo.md
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["fetch", "--from-dir"])
+        .arg(team_dir.path())
+        .args(["--name", "team"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains(
+            "'memo.md' is now shadowed by 'team'",
+        ));
+
+    // Fetch project
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["fetch", "--from-dir"])
+        .arg(proj_dir.path())
+        .args(["--name", "project"])
+        .assert()
+        .success();
+
+    // List json returns all 3 winning templates
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["list", "--json"])
+        .assert()
+        .success()
+        .stdout(predicate::function(|s: &str| {
+            let v: serde_json::Value = serde_json::from_str(s).unwrap();
+            let arr = v.as_array().unwrap();
+            arr.len() == 3
+        }));
+
+    // Get memo.md resolves to team memo and emits shadow warning on stderr
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["get", "memo.md"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Team memo."))
+        .stderr(predicate::str::contains("memo.md' is shadowed by 'team'"));
+
+    // Reaching shadowed corp memo directly with --source corp
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["get", "memo.md", "--source", "corp"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Corp memo."));
+
+    // Search by frontmatter across layers
+    lengua()
+        .arg("--store")
+        .arg(consumer_dir.path())
+        .args(["search", "--field", "tier=corp"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("notice.md"));
+}
+
+#[test]
+fn cli_storekeeper_tagging_diff_and_skills_lifecycle() {
+    let store_dir = tempfile::tempdir().unwrap();
+    init_store(store_dir.path());
+
+    // Add v1
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["add", "release.md", "--title", "Release Notes"])
+        .write_stdin("Version 1.0 notes.\n")
+        .assert()
+        .success();
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["tag", "add", "release.md", "v1.0"])
+        .assert()
+        .success();
+
+    // Add v2
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["add", "release.md", "--title", "Release Notes"])
+        .write_stdin("Version 2.0 notes with new features.\n")
+        .assert()
+        .success();
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["tag", "add", "release.md", "v2.0"])
+        .assert()
+        .success();
+
+    // Tag list
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["tag", "list", "release.md", "--json"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("v1.0").and(predicate::str::contains("v2.0")));
+
+    // Diff between tags
+    lengua()
+        .arg("--store")
+        .arg(store_dir.path())
+        .args(["diff", "release.md", "v1.0", "v2.0"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("- Version 1.0 notes.").and(predicate::str::contains(
+                "+ Version 2.0 notes with new features.",
+            )),
+        );
+
+    // Export skills
+    let skills_dest = tempfile::tempdir().unwrap();
+    lengua()
+        .args(["skills", skills_dest.path().to_str().unwrap()])
+        .assert()
+        .success();
+    assert!(
+        skills_dest
+            .path()
+            .join("lengua-template-authoring/SKILL.md")
+            .is_file()
+    );
+}

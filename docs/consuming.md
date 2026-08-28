@@ -147,6 +147,8 @@ There's no separate version-lock file to keep in sync: each source is a real git
 
 ## See also
 
+- [End-user guide]({{ '/end-user-guide.html' | relative_url }}) — in-depth walkthrough of pure-consumer setups, 3-tier layering, and scripting
+- [Storekeeper guide]({{ '/storekeeper-guide.html' | relative_url }}) — maintaining, organizing, versioning, and publishing organization stores
 - [`init`]({{ '/commands.html#init' | relative_url }}) — full flag reference
 - [`tag`]({{ '/commands.html#tag' | relative_url }}) — what gets preserved by a plain clone
 - [FAQ: What happens if I run lengua inside my own project's git repo?]({{ '/faq.html#what-happens-if-i-run-lengua-inside-my-own-projects-git-repo' | relative_url }}) — worth reading before picking where `./my-copy` lives
