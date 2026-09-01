@@ -174,7 +174,7 @@ Before publishing changes to an upstream store, run automated CI/CD checks (e.g.
 
 A storekeeper CI pipeline should verify:
 1. **Frontmatter validity**: YAML frontmatter parses cleanly and contains required keys (`title`, `category`, `schema_version`).
-2. **Jinja2 syntax validity**: No unclosed `{% %}` blocks, invalid filter names, or malformed expressions.
+2. **Jinja2 syntax validity**: No unclosed {% raw %}`{% %}`{% endraw %} blocks, invalid filter names, or malformed expressions.
 3. **Dry-run rendering**: Templates render successfully with mock variables.
 
 ### GitHub Actions CI workflow example
